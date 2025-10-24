@@ -9,63 +9,107 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  password   String
-  name       String
-  role       String   @default("Student")
-  classId    String
-  class      Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String          @id @default(uuid())
+  email            String          @unique
+  password         String
+  name             String
+  role             String          @default("Student")
+  classId          String
+  chats            Chat[]          @relation("UserChats")
+  class            Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([email])
+  @@index([classId])
 }
 
 model Teacher {
-  id          String      @id @default(uuid())
-  email       String      @unique
-  password    String
-  name        String
-  subjectId   String      
-  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  classes     Class[]     @relation("TeacherClasses")
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id               String          @id @default(uuid())
+  email            String          @unique
+  password         String
+  name             String
+  subjectId        String      
+  subject          Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classes          Class[]         @relation("TeacherClasses")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([email])
+  @@index([subjectId])
 }
 
 model Class {
-  id          String       @id @default(uuid())
-  name        String
-  course      Course
-  semester    Semester
-  section     Section
-  students    User[]
-  teachers    Teacher[]    @relation("TeacherClasses") 
-  subjects    Subject[]    @relation("ClassSubjects")  
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id               String          @id @default(uuid())
+  name             String
+  course           Course
+  semester         Semester
+  section          Section
+  students         User[]
+  teachers         Teacher[]       @relation("TeacherClasses") 
+  subjects         Subject[]       @relation("ClassSubjects")  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([course, semester, section])
 }
 
 model Subject {
-  id          String       @id @default(uuid())
-  name        String
-  code        String       @unique
-  teachers    Teacher[]    
-  resources   Resource[]  
-  classes     Class[]      @relation("ClassSubjects")  
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id               String          @id @default(uuid())
+  name             String
+  code             String          @unique
+  teachers         Teacher[]    
+  resources        Resource[]  
+  classes          Class[]         @relation("ClassSubjects")  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([code])
 }
 
 model Resource {
-  id          String       @id @default(uuid())
-  title       String
-  type        ResourceType @default(Link)
-  url         String
-  subjectId   String
-  subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  uploadedBy  String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id               String          @id @default(uuid())
+  title            String
+  type             ResourceType    @default(Link)
+  url              String
+  subjectId        String
+  subject          Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  uploadedBy       String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([subjectId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Chat {
+  id              String          @id @default(uuid())
+  userId          String
+  messages        ChatMessage[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User            @relation("UserChats", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id              String          @id @default(uuid())
+  chatId          String
+  role            MessageRole
+  content         String
+  timestamp       DateTime        @default(now())
+  chat            Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@index([timestamp])
+}
+
+enum MessageRole {
+  User
+  AI
 }
 
 enum ResourceType {
