@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  name       String
+  role       String   @default("Student")
+  classId    String
+  class      Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Teacher {
+  id          String      @id @default(uuid())
+  email       String      @unique
+  password    String
+  name        String
+  subjectId   String      
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classes     Class[]     @relation("TeacherClasses")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Class {
+  id          String       @id @default(uuid())
+  name        String
+  course      Course
+  semester    Semester
+  section     Section
+  students    User[]
+  teachers    Teacher[]    @relation("TeacherClasses") 
+  subjects    Subject[]    @relation("ClassSubjects")  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Subject {
+  id          String       @id @default(uuid())
+  name        String
+  code        String       @unique
+  teachers    Teacher[]    
+  resources   Resource[]  
+  classes     Class[]      @relation("ClassSubjects")  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Resource {
+  id          String       @id @default(uuid())
+  title       String
+  type        ResourceType @default(Link)
+  url         String
+  subjectId   String
+  subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  uploadedBy  String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum ResourceType {
+  Video
+  Document
+  Link
+}
+
+enum Course {
+  Btech
+  Mtech
+}
+
+enum Semester {
+  First
+  Second
+  Third
+  Fourth
+  Fifth
+  Sixth
+  Seventh
+  Eighth
+}
+
+enum Section {
+  A
+  B
+  C
+  D
+  CE
+}
