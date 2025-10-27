@@ -1,19 +1,24 @@
 import express from 'express';
 import { Request, Response } from 'express';
 import { userRegestrationSchema } from 'src/types/user';
+import * as  bcrypt from "bcryptjs"
 import prisma from 'src/utils/prisma';
 
 const router = express.Router();
 
 interface regestartionSchma {
-    firstName : string,
-    lastName : string,
+    firstName : string
+    lastName : string
     email : string,
-    password : string
+    password : string,
+    course : string,
+    semester : string,
+    section : string
 }
 
 router.post("/register",async(req:Request , res:Response)=>{
     try {
+    const isAdmin : boolean = false ;   
      // type checking of the user inputs during the regestration   
     const payload = req.body as regestartionSchma;
 
@@ -22,9 +27,9 @@ router.post("/register",async(req:Request , res:Response)=>{
             msg : "Type Error in the User fields"
         })
     }
-    const {email,firstName,lastName,password} = payload;
+    const {email,firstName ,lastName,password,semester,section,course} = req.body as regestartionSchma;
 
-    if(!email || !firstName || !lastName || !password){
+    if(!email || !firstName || !lastName || !password || semester || section || course){
         return res.status(403).json({
             msg : "Missing felids"
         })
@@ -49,6 +54,9 @@ router.post("/register",async(req:Request , res:Response)=>{
             msg : "User Already exists"
         })
     }
+    const id =  "12334"
+    const hashPassword = await bcrypt.hash(password,10);
+
 
     } catch (error) {
         res.status(500).json({

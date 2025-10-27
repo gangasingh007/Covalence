@@ -12,7 +12,8 @@ model User {
   id               String          @id @default(uuid())
   email            String          @unique
   password         String
-  name             String
+  firstName        String
+  lastName         String
   role             String          @default("User")
   classId          String
   chats            Chat[]          @relation("UserChats")
@@ -30,7 +31,8 @@ model Admin{
   id               String          @id @default(uuid())
   email            String          @unique
   password         String
-  name             String
+  firstName        String
+  lastName         String
   role             String          @default("User")
   classId          String
   chats            Chat[]          @relation("AdminChats")
@@ -42,7 +44,6 @@ model Admin{
 }
 model Class {
   id               String          @id @default(uuid())
-  name             String
   course           Course
   semester         Semester
   section          Section
