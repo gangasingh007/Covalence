@@ -13,32 +13,33 @@ model User {
   email            String          @unique
   password         String
   name             String
-  role             String          @default("Student")
+  role             String          @default("User")
   classId          String
   chats            Chat[]          @relation("UserChats")
   class            Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  profileImage     String          @default("default.png")
+
+  @@index([email])
+  @@index([classId])
+}
+
+
+model Admin{
+  id               String          @id @default(uuid())
+  email            String          @unique
+  password         String
+  name             String
+  role             String          @default("User")
+  classId          String
+  chats            Chat[]          @relation("AdminChats")
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
   @@index([email])
   @@index([classId])
 }
-
-model Teacher {
-  id               String          @id @default(uuid())
-  email            String          @unique
-  password         String
-  name             String
-  subjectId        String      
-  subject          Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  classes          Class[]         @relation("TeacherClasses")
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-
-  @@index([email])
-  @@index([subjectId])
-}
-
 model Class {
   id               String          @id @default(uuid())
   name             String
@@ -46,7 +47,6 @@ model Class {
   semester         Semester
   section          Section
   students         User[]
-  teachers         Teacher[]       @relation("TeacherClasses") 
   subjects         Subject[]       @relation("ClassSubjects")  
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -58,13 +58,13 @@ model Subject {
   id               String          @id @default(uuid())
   name             String
   code             String          @unique
-  teachers         Teacher[]    
+  teachername      String
   resources        Resource[]  
   classes          Class[]         @relation("ClassSubjects")  
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
-  @@index([code])
+  @@index([name])
 }
 
 model Resource {
@@ -86,11 +86,12 @@ model Resource {
 model Chat {
   id              String          @id @default(uuid())
   userId          String
+  adminId         String 
   messages        ChatMessage[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   user            User            @relation("UserChats", fields: [userId], references: [id], onDelete: Cascade)
-
+  admin           Admin           @relation("AdminChats", fields: [adminId], references: [id], onDelete: Cascade)
   @@index([userId])
   @@index([createdAt])
 }
@@ -106,6 +107,7 @@ model ChatMessage {
 
   @@index([chatId])
   @@index([timestamp])
+
 }
 
 enum MessageRole {
