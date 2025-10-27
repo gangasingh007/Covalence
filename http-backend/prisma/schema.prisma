@@ -98,7 +98,8 @@ model Chat {
 model ChatMessage {
   id              String          @id @default(uuid())
   chatId          String
-  role            MessageRole
+  role            MessageRole     @default(User)
+  name            String
   content         String
   timestamp       DateTime        @default(now())
   chat            Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
