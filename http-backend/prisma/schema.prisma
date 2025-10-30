@@ -14,7 +14,6 @@ model User {
   password         String
   firstName        String
   lastName         String
-  role             String          @default("User")
   classId          String
   chats            Chat[]          @relation("UserChats")
   class            Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
@@ -33,7 +32,6 @@ model Admin{
   password         String
   firstName        String
   lastName         String
-  role             String          @default("User")
   classId          String
   chats            Chat[]          @relation("AdminChats")
   createdAt        DateTime        @default(now())

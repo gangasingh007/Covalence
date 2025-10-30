@@ -1,18 +1,17 @@
 import express from 'express';
 import { Request, Response } from 'express';
-import { userRegestrationSchema } from 'src/zod/user';
 import * as  bcrypt from "bcryptjs"
 import prisma from 'src/utils/prisma';
 import {Course, Semester, Section} from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { regestraionSchema } from 'src/types';
+import { userRegestrationSchema } from 'src/zod/user';
 
 const router = express.Router();
 
 router.post("/user/register", async (req: Request, res: Response) => {
   try {
     // zod type checking
-    const isAdmin : boolean= false
     const payload = req.body as regestraionSchema;
     const parsedPayload = userRegestrationSchema.safeParse(payload);
 
@@ -68,16 +67,16 @@ router.post("/user/register", async (req: Request, res: Response) => {
         });
       }
 
-      if(!isAdmin){
-        const newUser = await tx.user.create({
+    
+      const newUser = await tx.user.create({
         data: {
           email,
           firstName,
           lastName,
           password: hashPassword,
           classId: classEntity.id,
-        },
-      });
+          },
+        });
 
       const token = jwt.sign(newUser.id,process.env.JWT_SECRET as string)
 
@@ -85,28 +84,6 @@ router.post("/user/register", async (req: Request, res: Response) => {
             newUser,
             token : token 
         });
-      }
-        
-      else {
-        const newAdmin = await tx.admin.create({
-          data: {
-            email,
-            firstName,
-            lastName,
-            password: hashPassword,
-            classId: classEntity.id,
-          },
-        });
-
-        
-        const token = jwt.sign(newAdmin.id,process.env.JWT_SECRET as string)
-
-        return res.status(200).json({
-            newAdmin,
-            token : token 
-        });
-      }
-
     });
 
     return res.status(201).json({ msg: "User registered successfully", user });
