@@ -31,3 +31,8 @@ enum semesterType{
     "Seventh",
     "Eighth"  
 }
+
+export interface loginSchema {
+    email : string,
+    password : string
+}
