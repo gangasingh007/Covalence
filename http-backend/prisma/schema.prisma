@@ -15,6 +15,7 @@ model User {
   firstName        String
   lastName         String
   classId          String
+  roll             String
   chats            Chat[]          @relation("UserChats")
   class            Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
   createdAt        DateTime        @default(now())
@@ -33,6 +34,7 @@ model Admin{
   firstName        String
   lastName         String
   classId          String
+  roll             String
   chats            Chat[]          @relation("AdminChats")
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
