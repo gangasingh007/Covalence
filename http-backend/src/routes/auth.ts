@@ -5,9 +5,10 @@ import {Course, Semester, Section} from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { loginSchema, regestraionSchema } from '../types';
 import prisma  from '../utils/prisma';
-import { userRegestrationSchema } from '../zod/user';
+import { userLoginSchema, userRegestrationSchema } from '../zod/user';
 import { adminRegestrationSchema } from '../zod/admin';
 import { adminDetails } from '../data';
+import authMiddleware from '../middlewares/auth';
 
 const router = express.Router();
 
@@ -185,15 +186,136 @@ router.post("/admin/register",async(req :Request,res : Response)=>{
             course : classEntity.course,
             semester : classEntity.semester,
             section : classEntity.section,
-            token : token 
+            profileImage : newAdmin.profileImage,
+            token : token,
+             
         });
     });
 })
 
 router.post("/login",async(req : Request ,res : Response)=>{
-  const  payload = req.body as loginSchema;
+  try {
+    const payload = req.body as loginSchema;
 
-  
+    const parsedPayload = userLoginSchema.safeParse(payload);
+
+    if (!parsedPayload.success) {
+      return res.status(400).json({
+        msg: "Type Error in the User fields",
+        errors: parsedPayload.error.flatten().fieldErrors,
+      });
+    }
+
+    const { email, password } = parsedPayload.data;
+
+    // Check if the user exists
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { class: true },
+    });
+
+    if (user) {
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (isPasswordValid) {
+        const token = jwt.sign({ id: user.id, role: 'user' }, process.env.JWT_SECRET as string);
+        return res.status(200).json({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          course: user.class.course,
+          section: user.class.section,
+          semester: user.class.semester,
+          profileImage: user.profileImage,
+          token,
+        });
+      }
+    }
+
+    // If not a user, check if it's an admin
+    const admin = await prisma.admin.findUnique({
+      where: { email },
+    });
+
+    if (admin) {
+      const isPasswordValid = await bcrypt.compare(password, admin.password);
+      if (isPasswordValid) {
+        const adminClass = await prisma.class.findUnique({
+          where: { id: admin.classId },
+        });
+
+        if (!adminClass) {
+          return res.status(404).json({ msg: "Admin class not found" });
+        }
+
+        const token = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET as string);
+        return res.status(200).json({
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          email: admin.email,
+          course: adminClass.course,
+          semester: adminClass.semester,
+          section: adminClass.section,
+          token,
+        });
+      }
+    }
+
+    // If neither user nor admin, or if password was wrong
+    return res.status(401).json({ msg: "Invalid email or password" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Internal Server Error in the login block" });
+  }
+})
+
+router.get("/me", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id, role } = req.user as { id: string; role: string };
+
+    if (role === 'user') {
+      const user = await prisma.user.findUnique({
+        where: { id },
+        include: { class: true },
+      });
+
+      if (!user) {
+        return res.status(404).json({ msg: "User not found" });
+      }
+
+      return res.status(200).json({
+        role: 'user',
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        course: user.class.course,
+        semester: user.class.semester,
+        section: user.class.section,
+        profileImage: user.profileImage,
+      });
+    } else if (role === 'admin') {
+      const admin = await prisma.admin.findUnique({ where: { id } });
+      if (!admin) {
+        return res.status(404).json({ msg: "Admin not found" });
+      }
+      const adminClass = await prisma.class.findUnique({ where: { id: admin.classId } });
+
+      return res.status(200).json({
+        role: 'admin',
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        course: adminClass?.course,
+        semester: adminClass?.semester,
+        section: adminClass?.section,
+        profileImage: admin.profileImage,
+      });
+    } else {
+      return res.status(403).json({ msg: "Invalid role" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Internal Server Error in the me block" });
+  }
 })
 
 export default router;
