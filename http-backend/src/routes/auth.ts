@@ -247,7 +247,7 @@ router.post("/login",async(req : Request ,res : Response)=>{
           return res.status(404).json({ msg: "Admin class not found" });
         }
 
-        const token = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET as string);
+        const token = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET as string,{expiresIn:"30d"});
         return res.status(200).json({
           firstName: admin.firstName,
           lastName: admin.lastName,
