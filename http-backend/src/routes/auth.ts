@@ -72,7 +72,7 @@ router.post("/user/register", async (req: Request, res: Response) => {
           },
         });
 
-      const token = jwt.sign(newUser.id,process.env.JWT_SECRET as string)
+      const token = jwt.sign(newUser.id,process.env.JWT_SECRET as string,{expiresIn : "30d"})
 
       return res.status(200).json({
             firstName : newUser.firstName,
@@ -177,7 +177,7 @@ router.post("/admin/register",async(req :Request,res : Response)=>{
           },
         });
 
-      const token = jwt.sign(newAdmin.id,process.env.JWT_SECRET as string )
+      const token = jwt.sign(newAdmin.id,process.env.JWT_SECRET as string,{expiresIn : "30d"} )
 
       return res.status(200).json({
             firstName : newAdmin.firstName,
@@ -217,7 +217,7 @@ router.post("/login",async(req : Request ,res : Response)=>{
     if (user) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (isPasswordValid) {
-        const token = jwt.sign({ id: user.id, role: 'user' }, process.env.JWT_SECRET as string);
+        const token = jwt.sign({ id: user.id, role: 'user' }, process.env.JWT_SECRET as string,{expiresIn : "30d"});
         return res.status(200).json({
           firstName: user.firstName,
           lastName: user.lastName,

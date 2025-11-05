@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-const authMiddleware = (req : Request,  res : Response, next : NextFunction) => {
+const authMiddleware = (req : Request ,  res : Response , next : NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
